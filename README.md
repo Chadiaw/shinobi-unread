@@ -15,25 +15,27 @@ pip install selenium
 
 ## Usage
 
-Example: Stop at 10 pages
+Example: Stop at 10 pages (start at page 3)
 ```
-$ python main.py username password 10
+$ python main.py username password 10 --start=3
 ```
 
 
 #### Help
 ```
 $ python main.py --help
-usage: main.py [-h] username password max
+usage: main.py [-h] [--start START] username password max
 
 Delete unread messages on shinobi.fr
 
 positional arguments:
-  username    Username
-  password    Password
-  max         How many pages to go through (default 10)
+  username       Username
+  password       Password
+  max            How many pages to go through (default 10)
 
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help     show this help message and exit
+  --start START  Specify a starting page
+
 
 ```
