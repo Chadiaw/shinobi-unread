@@ -1,3 +1,4 @@
+# coding=utf-8
 import argparse
 import time
 
@@ -27,37 +28,40 @@ def login(driver, username, password):
     # wait 5 seconds max, to confirm login
     WebDriverWait(driver, 5).until(expected.visibility_of_element_located((By.XPATH, MSG_XPATH)))
     print("Login successful")
-    time.sleep(1)
+    # time.sleep(1)
 
 
 def logout(driver):
     logout_btn = driver.find_element_by_link_text("Déconnexion")
     logout_btn.click()
-    time.sleep(1)
+    # time.sleep(1)
 
 
 def go_to_messages(driver):
     driver.find_element_by_xpath(MSG_XPATH).click()
-    time.sleep(1)
+    # time.sleep(1)
 
 
 def go_next_page(driver):
     next_btn = driver.find_element_by_link_text("»")
     next_btn.click()
+    # time.sleep(0.1)
+
+
+def go_to_page(driver, page: int):
+    driver.get(f"http://www.shinobi.fr/index.php?page=menu-messagerie&pg={page}")
 
 
 def delete_unread(driver):
-    # delete all unread msgs on current page
-    while True:
-        try:
-            unread = driver.find_element_by_class_name("nonlu")
-        except NoSuchElementException:
-            # no more unread msg
-            return
-        else:
-            delete_btn = unread.find_element_by_css_selector("img[src='http://images.shinobi.fr/design/suppr.gif']")
-            delete_btn.click()
-            time.sleep(0.1)
+    # delete the first unread found on the page
+    try:
+        unread = driver.find_element_by_class_name("nonlu")
+        delete_btn = unread.find_element_by_css_selector("img[src='http://images.shinobi.fr/design/suppr.gif']")
+        delete_btn.click()
+        return True
+    except NoSuchElementException:
+        # no more unread msg
+        return False
 
 
 if __name__ == '__main__':
@@ -65,6 +69,7 @@ if __name__ == '__main__':
     parser.add_argument("username", type=str, help="Username")
     parser.add_argument("password", type=str, help="Password")
     parser.add_argument("max", type=int, help="How many pages to go through (default 10)", default=10)
+    parser.add_argument("--start", type=int, dest="start", help="Specify a starting page")
     args = parser.parse_args()
 
     # Use driver in the current directory
@@ -72,14 +77,22 @@ if __name__ == '__main__':
 
     login(webdriver, args.username, args.password)
     go_to_messages(webdriver)
-    page = 1
+
+    if args.start:
+        page = args.start
+        go_to_page(webdriver, page)
+    else:
+        page = 1
 
     while page <= args.max:
         print(f"Deleting unread messages on page {page}")
-        delete_unread(webdriver)
-        go_next_page(webdriver)
-        time.sleep(1)
-        page += 1
+        if delete_unread(webdriver):
+            # deleted something, go back to the page
+            go_to_page(webdriver, page)
+        else:
+            # found no unread, increment page
+            page += 1
+            go_to_page(webdriver, page)
 
     print("Done.")
     logout(webdriver)
